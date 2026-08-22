@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package orderbook.v1;
+
+message Bond {
+    string id = 1;
+    string name = 2;
+}
