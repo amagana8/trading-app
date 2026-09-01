@@ -11,16 +11,16 @@ public class OrderService : OrderEventsService.OrderEventsServiceBase
 {
     private readonly HashSet<OrderId> _availablePool;
 
-    private readonly AccountService _accountService;
-    private readonly BondService _bondService;
+    private readonly IAccountService _accountService;
+    private readonly IBondService _bondService;
     private readonly Dictionary<OrderId, Order> _orderBook;
     private readonly int _minOrderBookSize;
     private readonly int _orderEventsPerSecond;
 
     public OrderService(
         IOptions<AppOptions> options,
-        AccountService accountService,
-        BondService bondService
+        IAccountService accountService,
+        IBondService bondService
     )
     {
         _minOrderBookSize = options.Value.MinOrderBookSize;
@@ -33,8 +33,8 @@ public class OrderService : OrderEventsService.OrderEventsServiceBase
         );
 
         foreach (var accountId in _accountService.GetIds())
-        foreach (var bondId in _bondService.GetIds())
-            _availablePool.Add((accountId, bondId));
+            foreach (var bondId in _bondService.GetIds())
+                _availablePool.Add((accountId, bondId));
     }
 
     public override async Task GetOrderEvents(
