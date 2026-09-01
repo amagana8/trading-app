@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package orderbook.v1;
 
+option csharp_namespace = "OrderBook.Bond";
+
 message Bond {
-    string id = 1;
-    string name = 2;
+  string id = 1;
+  string name = 2;
 }
