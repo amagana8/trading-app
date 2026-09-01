@@ -18,6 +18,8 @@ export class OrderbookService implements OnModuleInit {
     }
 
     public subscribe(clientId: string) {
+        this.unsubscribe(clientId);
+
         const unsubscribe$ = new Subject<void>();
         this.subscriptions.set(clientId, unsubscribe$);
         return { orderBook$: this.orderBook$, unsubscribe$ };

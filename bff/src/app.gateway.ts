@@ -23,6 +23,7 @@ export class AppGateway implements OnGatewayDisconnect, OnGatewayConnection {
 
     handleDisconnect(socket: Socket): void {
         this.logger.log(`${socket.id} has disconnected`);
+        this.orderbookService.unsubscribe(socket.id);
     }
 
     handleConnection(socket: Socket): void {
