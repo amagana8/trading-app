@@ -1,0 +1,10 @@
+version: v2
+plugins:
+  - local: bff/node_modules/.bin/protoc-gen-ts_proto
+    out: bff/src/pb
+    opt:
+      - nestJs=true
+      - useOptionals=messages
+      - importSuffix=.js
+  - local: /home/alex/.nuget/packages/grpc.tools/2.64.0/tools/linux_x64/grpc_csharp_plugin
+    out: orderbook/obj/Debug/net10.0
