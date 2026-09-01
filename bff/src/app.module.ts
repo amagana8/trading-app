@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { createObserveModule } from '@nestjs/observe';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
+import { AppGateway } from './app.gateway.js';
+import { OrderbookModule } from './orderbook/orderbook.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -14,8 +14,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       appSecret: 'YOUR_APP_SECRET',
       serviceId: 'bff',
     }),
+    OrderbookModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  providers: [AppGateway],
 })
-export class AppModule {}
+export class AppModule { }
