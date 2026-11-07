@@ -1,6 +1,6 @@
-using System.Threading.Channels;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Threading.Channels;
 using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Options;
 using OrderBook.Account;
@@ -18,7 +18,8 @@ public class OrderSimulator : BackgroundService
     private readonly Dictionary<OrderId, Order> _orderBook;
     private readonly int _minOrderBookSize;
     private readonly int _orderEventsPerSecond;
-    private readonly ConcurrentDictionary<Guid, Channel<GetOrderEventsResponse>> _subscribers = new();
+    private readonly ConcurrentDictionary<Guid, Channel<GetOrderEventsResponse>> _subscribers =
+        new();
 
     public OrderSimulator(
         IOptions<AppOptions> options,
@@ -36,8 +37,8 @@ public class OrderSimulator : BackgroundService
         );
 
         foreach (var accountId in _accountService.GetIds())
-            foreach (var bondId in _bondService.GetIds())
-                _availablePool.Add((accountId, bondId));
+        foreach (var bondId in _bondService.GetIds())
+            _availablePool.Add((accountId, bondId));
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -61,13 +62,13 @@ public class OrderSimulator : BackgroundService
         }
     }
 
-    public async IAsyncEnumerable<GetOrderEventsResponse> GetOrderEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<GetOrderEventsResponse> GetOrderEventsAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken
+    )
     {
-        var channel = Channel.CreateUnbounded<GetOrderEventsResponse>(new UnboundedChannelOptions
-        {
-            SingleReader = true,
-            SingleWriter = true,
-        });
+        var channel = Channel.CreateUnbounded<GetOrderEventsResponse>(
+            new UnboundedChannelOptions { SingleReader = true, SingleWriter = true }
+        );
 
         var id = Guid.NewGuid();
         _subscribers.TryAdd(id, channel);

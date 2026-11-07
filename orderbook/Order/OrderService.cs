@@ -6,9 +6,7 @@ public class OrderService : OrderEventsService.OrderEventsServiceBase
 {
     private readonly OrderSimulator _orderSimulator;
 
-    public OrderService(
-        OrderSimulator orderSimulator
-    )
+    public OrderService(OrderSimulator orderSimulator)
     {
         _orderSimulator = orderSimulator;
     }
@@ -19,7 +17,9 @@ public class OrderService : OrderEventsService.OrderEventsServiceBase
         ServerCallContext context
     )
     {
-        await foreach (var orderEvent in _orderSimulator.GetOrderEventsAsync(context.CancellationToken))
+        await foreach (
+            var orderEvent in _orderSimulator.GetOrderEventsAsync(context.CancellationToken)
+        )
         {
             await responseStream.WriteAsync(orderEvent, context.CancellationToken);
         }
