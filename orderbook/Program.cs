@@ -13,6 +13,7 @@ builder
 builder.Services.AddSingleton<IAccountService, AccountService>();
 builder.Services.AddSingleton<IBondService, BondService>();
 builder.Services.AddSingleton<OrderSimulator>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<OrderSimulator>());
 builder.Services.AddGrpc();
 
 var app = builder.Build();

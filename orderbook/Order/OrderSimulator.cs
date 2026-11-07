@@ -1,5 +1,7 @@
+using System.Threading.Channels;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using Google.Protobuf.WellKnownTypes;
-using Grpc.Core;
 using Microsoft.Extensions.Options;
 using OrderBook.Account;
 using OrderBook.Bond;
@@ -15,6 +17,8 @@ public class OrderSimulator : BackgroundService
     private readonly IBondService _bondService;
     private readonly Dictionary<OrderId, Order> _orderBook;
     private readonly int _minOrderBookSize;
+    private readonly int _orderEventsPerSecond;
+    private readonly ConcurrentDictionary<Guid, Channel<GetOrderEventsResponse>> _subscribers = new();
 
     public OrderSimulator(
         IOptions<AppOptions> options,
@@ -23,6 +27,7 @@ public class OrderSimulator : BackgroundService
     )
     {
         _minOrderBookSize = options.Value.MinOrderBookSize;
+        _orderEventsPerSecond = options.Value.OrderEventsPerSecond;
         _orderBook = new(_minOrderBookSize);
         _accountService = accountService;
         _bondService = bondService;
@@ -35,7 +40,53 @@ public class OrderSimulator : BackgroundService
                 _availablePool.Add((accountId, bondId));
     }
 
-    public GetOrderEventsResponse? SimulateOrderEvent()
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1.0 / _orderEventsPerSecond));
+        do
+        {
+            var orderEvent = SimulateOrderEvent();
+            if (orderEvent is not null)
+            {
+                Broadcast(orderEvent);
+            }
+        } while (await timer.WaitForNextTickAsync(cancellationToken));
+    }
+
+    private void Broadcast(GetOrderEventsResponse orderEvent)
+    {
+        foreach (var subscriber in _subscribers.Values)
+        {
+            subscriber.Writer.TryWrite(orderEvent);
+        }
+    }
+
+    public async IAsyncEnumerable<GetOrderEventsResponse> GetOrderEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var channel = Channel.CreateUnbounded<GetOrderEventsResponse>(new UnboundedChannelOptions
+        {
+            SingleReader = true,
+            SingleWriter = true,
+        });
+
+        var id = Guid.NewGuid();
+        _subscribers.TryAdd(id, channel);
+
+        try
+        {
+            await foreach (var orderEvent in channel.Reader.ReadAllAsync(cancellationToken))
+            {
+                yield return orderEvent;
+            }
+        }
+        finally
+        {
+            _subscribers.TryRemove(id, out _);
+            channel.Writer.Complete();
+        }
+    }
+
+    private GetOrderEventsResponse? SimulateOrderEvent()
     {
         var action = GetOrderEventType();
 
@@ -124,18 +175,21 @@ public class OrderSimulator : BackgroundService
         if (_bondService.GetById(order.Key.BondId) is null)
             return null;
 
+        var updatedOrder = order.Value.Clone();
+
         if (Random.Shared.Next(2) == 0)
         {
             var priceDelta = 0.1m + (decimal)Random.Shared.NextDouble() * (4m - 0.1m);
-            order.Value.Price += order.Value.Side == Side.Buy ? -priceDelta : priceDelta;
+            updatedOrder.Price += updatedOrder.Side == Side.Buy ? -priceDelta : priceDelta;
         }
         else
         {
-            order.Value.Quantity += Random.Shared.NextInt64(1_000_000, 10_000_000);
+            updatedOrder.Quantity += Random.Shared.NextInt64(1_000_000, 10_000_000);
         }
 
-        order.Value.UpdatedAt = Timestamp.FromDateTime(DateTime.UtcNow);
-        return new GetOrderEventsResponse { Order = order.Value, UpdateType = OrderAction.Update };
+        updatedOrder.UpdatedAt = Timestamp.FromDateTime(DateTime.UtcNow);
+        _orderBook[order.Key] = updatedOrder;
+        return new GetOrderEventsResponse { Order = updatedOrder, UpdateType = OrderAction.Update };
     }
 
     private T WeightedSample<T>(IReadOnlyList<(T item, int weight)> items)

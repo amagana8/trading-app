@@ -1,20 +1,15 @@
 using Grpc.Core;
-using Microsoft.Extensions.Options;
 
 namespace OrderBook.Order;
 
 public class OrderService : OrderEventsService.OrderEventsServiceBase
 {
     private readonly OrderSimulator _orderSimulator;
-    private readonly int _orderEventsPerSecond;
-
 
     public OrderService(
-        IOptions<AppOptions> options,
         OrderSimulator orderSimulator
     )
     {
-        _orderEventsPerSecond = options.Value.OrderEventsPerSecond;
         _orderSimulator = orderSimulator;
     }
 
@@ -24,18 +19,9 @@ public class OrderService : OrderEventsService.OrderEventsServiceBase
         ServerCallContext context
     )
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1.0 / _orderEventsPerSecond));
-        do
+        await foreach (var orderEvent in _orderSimulator.GetOrderEventsAsync(context.CancellationToken))
         {
-            var orderEvent = _orderSimulator.SimulateOrderEvent();
-            if (orderEvent is not null)
-            {
-                await responseStream.WriteAsync(orderEvent, context.CancellationToken);
-            }
-        } while (await timer.WaitForNextTickAsync(context.CancellationToken));
+            await responseStream.WriteAsync(orderEvent, context.CancellationToken);
+        }
     }
-
-
-
-
 }
