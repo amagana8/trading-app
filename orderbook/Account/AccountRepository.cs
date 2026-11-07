@@ -3,17 +3,17 @@ using Microsoft.Extensions.Options;
 namespace OrderBook.Account;
 
 /// <summary>
-/// Service implementation for managing and accessing generated accounts.
+/// In-memory repository implementation for managing and accessing generated accounts.
 /// </summary>
-public class AccountService : IAccountService
+public class AccountRepository : IAccountRepository
 {
     private readonly Dictionary<Guid, Account> _accountMap;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AccountService"/> class.
+    /// Initializes a new instance of the <see cref="AccountRepository"/> class.
     /// </summary>
-    /// <param name="options">The application options containing AccountService configurations.</param>
-    public AccountService(IOptions<AppOptions> options)
+    /// <param name="options">The application options containing account repository configurations.</param>
+    public AccountRepository(IOptions<AppOptions> options)
     {
         _accountMap = new(options.Value.AccountMapSize);
         for (int i = 0; i < options.Value.AccountMapSize; i++)

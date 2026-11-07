@@ -10,8 +10,8 @@ builder
     .Bind(builder.Configuration.GetSection(AppOptions.SectionName))
     .ValidateDataAnnotations()
     .ValidateOnStart();
-builder.Services.AddSingleton<IAccountService, AccountService>();
-builder.Services.AddSingleton<IBondService, BondService>();
+builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
+builder.Services.AddSingleton<IBondRepository, BondRepository>();
 builder.Services.AddSingleton<OrderSimulator>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<OrderSimulator>());
 builder.Services.AddGrpc();

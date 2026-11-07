@@ -13,8 +13,8 @@ public class OrderSimulator : BackgroundService
 {
     private readonly HashSet<OrderId> _availablePool;
 
-    private readonly IAccountService _accountService;
-    private readonly IBondService _bondService;
+    private readonly IAccountRepository _accountRepository;
+    private readonly IBondRepository _bondRepository;
     private readonly Dictionary<OrderId, Order> _orderBook;
     private readonly int _minOrderBookSize;
     private readonly int _orderEventsPerSecond;
@@ -23,21 +23,21 @@ public class OrderSimulator : BackgroundService
 
     public OrderSimulator(
         IOptions<AppOptions> options,
-        IAccountService accountService,
-        IBondService bondService
+        IAccountRepository accountRepository,
+        IBondRepository bondRepository
     )
     {
         _minOrderBookSize = options.Value.MinOrderBookSize;
         _orderEventsPerSecond = options.Value.OrderEventsPerSecond;
         _orderBook = new(_minOrderBookSize);
-        _accountService = accountService;
-        _bondService = bondService;
+        _accountRepository = accountRepository;
+        _bondRepository = bondRepository;
         _availablePool = new HashSet<OrderId>(
-            _accountService.GetIds().Count() * _bondService.GetIds().Count()
+            _accountRepository.GetIds().Count() * _bondRepository.GetIds().Count()
         );
 
-        foreach (var accountId in _accountService.GetIds())
-        foreach (var bondId in _bondService.GetIds())
+        foreach (var accountId in _accountRepository.GetIds())
+        foreach (var bondId in _bondRepository.GetIds())
             _availablePool.Add((accountId, bondId));
     }
 
@@ -130,10 +130,10 @@ public class OrderSimulator : BackgroundService
         _availablePool.Remove(orderId);
         var (accountId, bondId) = orderId;
 
-        if (_bondService.GetById(bondId) is null)
+        if (_bondRepository.GetById(bondId) is null)
             return null;
 
-        if (_accountService.GetById(accountId) is null)
+        if (_accountRepository.GetById(accountId) is null)
             return null;
 
         var now = DateTime.UtcNow;
@@ -173,7 +173,7 @@ public class OrderSimulator : BackgroundService
             return null;
 
         var order = _orderBook.ElementAt(Random.Shared.Next(_orderBook.Count));
-        if (_bondService.GetById(order.Key.BondId) is null)
+        if (_bondRepository.GetById(order.Key.BondId) is null)
             return null;
 
         var updatedOrder = order.Value.Clone();

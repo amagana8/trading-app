@@ -1,9 +1,9 @@
 namespace OrderBook.Account;
 
 /// <summary>
-/// Service interface for managing and accessing trading accounts.
+/// Repository interface for managing and accessing trading accounts.
 /// </summary>
-public interface IAccountService
+public interface IAccountRepository
 {
     /// <summary>
     /// Retrieves an account by its unique identifier.

@@ -3,17 +3,17 @@ using Microsoft.Extensions.Options;
 namespace OrderBook.Bond;
 
 /// <summary>
-/// Service implementation for managing and accessing generated bonds.
+/// In-memory repository implementation for managing and accessing generated bonds.
 /// </summary>
-public class BondService : IBondService
+public class BondRepository : IBondRepository
 {
     private readonly Dictionary<string, Bond> _bondMap;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BondService"/> class.
+    /// Initializes a new instance of the <see cref="BondRepository"/> class.
     /// </summary>
-    /// <param name="options">The application options containing bond configuration.</param>
-    public BondService(IOptions<AppOptions> options)
+    /// <param name="options">The application options containing bond repository configurations.</param>
+    public BondRepository(IOptions<AppOptions> options)
     {
         _bondMap = new(options.Value.BondMapSize);
         for (int i = 0; i < options.Value.BondMapSize; i++)

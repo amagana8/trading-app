@@ -1,9 +1,9 @@
 namespace OrderBook.Bond;
 
 /// <summary>
-/// Service interface for managing and accessing bonds.
+/// Repository interface for managing and accessing bonds.
 /// </summary>
-public interface IBondService
+public interface IBondRepository
 {
     /// <summary>
     /// Retrieves a bond by its unique identifier.
