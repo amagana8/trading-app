@@ -19,9 +19,9 @@ enum Side {
 
 enum OrderAction {
   ORDER_ACTION_UNSPECIFIED = 0;
-  ORDER_ACTION_NEW = 1;
+  ORDER_ACTION_ADD = 1;
   ORDER_ACTION_UPDATE = 2;
-  ORDER_ACTION_CANCEL = 3;
+  ORDER_ACTION_REMOVE = 3;
 }
 
 message Order {

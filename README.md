@@ -29,7 +29,7 @@ Real-time trading demo: C# services stream order and bond-price events to a Nest
 
 ## Architecture
 
-The orderbook service holds a simulated order book and streams `NEW` / `UPDATE` / `CANCEL` events. A second C# service will stream bond price updates. A third C# service will provide reference data for simulated bonds, used by both the order and pricing services. The BFF opens a single gRPC stream to each service, then relays events to subscribed browser clients. The UI will update in real-time and consist of an AG Grid table to display the orderbook and an AG Charts candlestick visualizer chart.
+The orderbook service holds a simulated order book and streams `ADD` / `UPDATE` / `REMOVE` events. A second C# service will stream bond price updates. A third C# service will provide reference data for simulated bonds, used by both the order and pricing services. The BFF opens a single gRPC stream to each service, then relays events to subscribed browser clients. The UI will update in real-time and consist of an AG Grid table to display the orderbook and an AG Charts candlestick visualizer chart.
 
 Protobuf contracts live in `protos/` and are shared by both backends. Use `buf generate` to generate protobuf code.
 ## Project layout
@@ -83,7 +83,7 @@ Socket.IO events:
 | `orderBook.subscribe` | `orderBook.update` | Start receiving order events |
 | `orderBook.unsubscribe` | — | Stop receiving events |
 
-Each `orderBook.update` payload is a `GetOrderEventsResponse`: an `Order` plus an `OrderAction` (`NEW`, `UPDATE`, or `CANCEL`).
+Each `orderBook.update` payload is a `GetOrderEventsResponse`: an `Order` plus an `OrderAction` (`ADD`, `UPDATE`, or `REMOVE`).
 
 Bond price subscribe/unsubscribe events will follow the same pattern once the prices service exists.
 

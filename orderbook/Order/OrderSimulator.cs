@@ -93,8 +93,8 @@ public class OrderSimulator : BackgroundService
 
         return action switch
         {
-            OrderAction.New => CreateNewOrderEvent(),
-            OrderAction.Cancel => CreateCancelOrderEvent(),
+            OrderAction.Add => CreateAddOrderEvent(),
+            OrderAction.Remove => CreateRemoveOrderEvent(),
             OrderAction.Update => CreateUpdateOrderEvent(),
             _ => throw new ArgumentException("Invalid order action", nameof(action)),
         };
@@ -104,24 +104,24 @@ public class OrderSimulator : BackgroundService
     {
         if (_orderBook.Count < _minOrderBookSize)
         {
-            return OrderAction.New;
+            return OrderAction.Add;
         }
 
         if (_availablePool.Count > 0)
         {
             return WeightedSample([
-                (OrderAction.New, 4),
-                (OrderAction.Cancel, 1),
+                (OrderAction.Add, 4),
+                (OrderAction.Remove, 1),
                 (OrderAction.Update, 5),
             ]);
         }
         else
         {
-            return WeightedSample([(OrderAction.Cancel, 3), (OrderAction.Update, 7)]);
+            return WeightedSample([(OrderAction.Remove, 3), (OrderAction.Update, 7)]);
         }
     }
 
-    private GetOrderEventsResponse? CreateNewOrderEvent()
+    private GetOrderEventsResponse? CreateAddOrderEvent()
     {
         if (_availablePool.Count == 0)
             return null;
@@ -152,10 +152,10 @@ public class OrderSimulator : BackgroundService
 
         _orderBook[orderId] = order;
 
-        return new GetOrderEventsResponse { Order = order, UpdateType = OrderAction.New };
+        return new GetOrderEventsResponse { Order = order, UpdateType = OrderAction.Add };
     }
 
-    private GetOrderEventsResponse? CreateCancelOrderEvent()
+    private GetOrderEventsResponse? CreateRemoveOrderEvent()
     {
         if (_orderBook.Count == 0)
             return null;
@@ -164,7 +164,7 @@ public class OrderSimulator : BackgroundService
         _orderBook.Remove(order.Key);
         _availablePool.Add(order.Key);
 
-        return new GetOrderEventsResponse { Order = order.Value, UpdateType = OrderAction.Cancel };
+        return new GetOrderEventsResponse { Order = order.Value, UpdateType = OrderAction.Remove };
     }
 
     private GetOrderEventsResponse? CreateUpdateOrderEvent()
